@@ -1,4 +1,6 @@
 import { users, debts, budgetItems, payments, type User, type InsertUser, type Debt, type InsertDebt, type BudgetItem, type InsertBudgetItem, type Payment, type InsertPayment, type DebtWithPayments } from "@shared/schema";
+import { db } from "./db";
+import { eq } from "drizzle-orm";
 
 export interface IStorage {
   // User methods
@@ -215,4 +217,153 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export class DatabaseStorage implements IStorage {
+  // User methods
+  async getUser(id: number): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user || undefined;
+  }
+
+  async getUserByUsername(username: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user || undefined;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(insertUser)
+      .returning();
+    return user;
+  }
+
+  // Debt methods
+  async getDebts(userId: number): Promise<Debt[]> {
+    return await db.select().from(debts).where(eq(debts.userId, userId));
+  }
+
+  async getDebt(id: number, userId: number): Promise<Debt | undefined> {
+    const [debt] = await db.select().from(debts).where(eq(debts.id, id));
+    return debt && debt.userId === userId ? debt : undefined;
+  }
+
+  async createDebt(debt: InsertDebt & { userId: number }): Promise<Debt> {
+    const [newDebt] = await db
+      .insert(debts)
+      .values({
+        ...debt,
+        balance: debt.balance.toString(),
+        interestRate: debt.interestRate.toString(),
+        minimumPayment: debt.minimumPayment.toString(),
+      })
+      .returning();
+    return newDebt;
+  }
+
+  async updateDebt(id: number, userId: number, debt: Partial<InsertDebt>): Promise<Debt | undefined> {
+    const [updated] = await db
+      .update(debts)
+      .set({
+        ...debt,
+        balance: debt.balance?.toString(),
+        interestRate: debt.interestRate?.toString(),
+        minimumPayment: debt.minimumPayment?.toString(),
+      })
+      .where(eq(debts.id, id))
+      .returning();
+    return updated && updated.userId === userId ? updated : undefined;
+  }
+
+  async deleteDebt(id: number, userId: number): Promise<boolean> {
+    // First delete associated payments
+    await db.delete(payments).where(eq(payments.debtId, id));
+    
+    const result = await db.delete(debts).where(eq(debts.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  async getDebtsWithPayments(userId: number): Promise<DebtWithPayments[]> {
+    const userDebts = await this.getDebts(userId);
+    const result: DebtWithPayments[] = [];
+    
+    for (const debt of userDebts) {
+      const debtPayments = await this.getPaymentsByDebt(debt.id, userId);
+      const totalPaid = debtPayments.reduce((sum, payment) => sum + parseFloat(payment.amount), 0);
+      const remainingBalance = parseFloat(debt.balance) - totalPaid;
+      
+      result.push({
+        ...debt,
+        payments: debtPayments,
+        totalPaid,
+        remainingBalance,
+      });
+    }
+    
+    return result;
+  }
+
+  // Budget methods
+  async getBudgetItems(userId: number): Promise<BudgetItem[]> {
+    return await db.select().from(budgetItems).where(eq(budgetItems.userId, userId));
+  }
+
+  async getBudgetItem(id: number, userId: number): Promise<BudgetItem | undefined> {
+    const [item] = await db.select().from(budgetItems).where(eq(budgetItems.id, id));
+    return item && item.userId === userId ? item : undefined;
+  }
+
+  async createBudgetItem(item: InsertBudgetItem & { userId: number }): Promise<BudgetItem> {
+    const [newItem] = await db
+      .insert(budgetItems)
+      .values({
+        ...item,
+        amount: item.amount.toString(),
+      })
+      .returning();
+    return newItem;
+  }
+
+  async updateBudgetItem(id: number, userId: number, item: Partial<InsertBudgetItem>): Promise<BudgetItem | undefined> {
+    const [updated] = await db
+      .update(budgetItems)
+      .set({
+        ...item,
+        amount: item.amount?.toString(),
+      })
+      .where(eq(budgetItems.id, id))
+      .returning();
+    return updated && updated.userId === userId ? updated : undefined;
+  }
+
+  async deleteBudgetItem(id: number, userId: number): Promise<boolean> {
+    const result = await db.delete(budgetItems).where(eq(budgetItems.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+
+  // Payment methods
+  async getPayments(userId: number): Promise<Payment[]> {
+    return await db.select().from(payments).where(eq(payments.userId, userId));
+  }
+
+  async getPaymentsByDebt(debtId: number, userId: number): Promise<Payment[]> {
+    return await db.select().from(payments).where(eq(payments.debtId, debtId));
+  }
+
+  async createPayment(payment: InsertPayment & { userId: number }): Promise<Payment> {
+    const [newPayment] = await db
+      .insert(payments)
+      .values({
+        ...payment,
+        amount: payment.amount.toString(),
+      })
+      .returning();
+    return newPayment;
+  }
+
+  async deletePayment(id: number, userId: number): Promise<boolean> {
+    const result = await db.delete(payments).where(eq(payments.id, id));
+    return result.rowCount ? result.rowCount > 0 : false;
+  }
+}
+
+export const storage = new DatabaseStorage();

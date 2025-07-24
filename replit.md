@@ -27,9 +27,10 @@ Preferred communication style: Simple, everyday language.
 - **API Design**: RESTful API with structured error handling
 
 ### Data Storage Solutions
-- **Primary Database**: PostgreSQL via Neon Database
+- **Primary Database**: PostgreSQL via Neon Database (migrated from in-memory storage)
 - **ORM**: Drizzle ORM for type-safe database operations
 - **Schema Management**: Drizzle Kit for migrations
+- **Storage Implementation**: DatabaseStorage class implementing IStorage interface
 - **Client Storage**: localStorage for authentication tokens
 
 ## Key Components
