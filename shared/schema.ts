@@ -15,11 +15,14 @@ export const debts = pgTable("debts", {
   userId: integer("user_id").notNull(),
   name: text("name").notNull(),
   balance: decimal("balance", { precision: 12, scale: 2 }).notNull(),
-  interestRate: decimal("interest_rate", { precision: 5, scale: 2 }).notNull(),
-  minimumPayment: decimal("minimum_payment", { precision: 12, scale: 2 }).notNull(),
-  dueDate: integer("due_date").notNull(), // Day of month (1-31)
+  interestRate: decimal("interest_rate", { precision: 5, scale: 2 }).default("0").notNull(),
+  minimumPayment: decimal("minimum_payment", { precision: 12, scale: 2 }).default("0").notNull(),
+  dueDate: integer("due_date"), // Day of month (1-31) - optional for informal loans
   debtType: varchar("debt_type", { length: 50 }).notNull(),
-  paymentFrequency: varchar("payment_frequency", { length: 20 }).notNull().default("monthly"),
+  paymentFrequency: varchar("payment_frequency", { length: 20 }).default("none").notNull(), // 'monthly', 'weekly', 'none'
+  creditorName: text("creditor_name"), // For personal loans - person's name
+  hasMonthlyPayments: boolean("has_monthly_payments").default(false).notNull(),
+  notes: text("notes"), // Additional details about the debt
   createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -59,8 +62,8 @@ export const insertDebtSchema = createInsertSchema(debts).omit({
 }).extend({
   balance: z.coerce.number().positive(),
   interestRate: z.coerce.number().min(0).max(100),
-  minimumPayment: z.coerce.number().positive(),
-  dueDate: z.coerce.number().min(1).max(31),
+  minimumPayment: z.coerce.number().min(0),
+  dueDate: z.coerce.number().min(1).max(31).optional(),
 });
 
 export const insertBudgetItemSchema = createInsertSchema(budgetItems).omit({

@@ -37,9 +37,17 @@ Preferred communication style: Simple, everyday language.
 ### Database Schema
 The application uses four main tables:
 - **users**: User authentication and profile data
-- **debts**: Debt tracking with balance, interest rates, and payment schedules
+- **debts**: Flexible debt tracking with balance, optional interest rates, and customizable payment schedules
 - **budgetItems**: Income and expense categorization with essential/fixed flags
 - **payments**: Payment history and tracking
+
+#### Enhanced Debt Management Features
+- **Flexible Debt Types**: Support for formal debts (credit cards, loans) and informal loans (family/friends)
+- **Optional Due Dates**: Some debts have no due dates (personal loans without interest)
+- **Payment Plan Flexibility**: Monthly, weekly, or no payment plan options
+- **Creditor Information**: Optional creditor/person name for personal loans
+- **Interest Rate Options**: Supports 0% interest for informal loans
+- **Notes Field**: Additional details about debt arrangements
 
 ### Authentication System
 - Simple username/password authentication

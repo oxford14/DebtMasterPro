@@ -85,7 +85,11 @@ export class MemStorage implements IStorage {
       balance: debt.balance.toString(),
       interestRate: debt.interestRate.toString(),
       minimumPayment: debt.minimumPayment.toString(),
-      paymentFrequency: debt.paymentFrequency || "monthly",
+      dueDate: debt.dueDate || null,
+      paymentFrequency: debt.paymentFrequency || "none",
+      creditorName: debt.creditorName || null,
+      hasMonthlyPayments: debt.hasMonthlyPayments || false,
+      notes: debt.notes || null,
       createdAt: new Date(),
     };
     this.debts.set(id, newDebt);

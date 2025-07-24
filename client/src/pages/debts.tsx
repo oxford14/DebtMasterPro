@@ -23,7 +23,8 @@ import { z } from "zod";
 const debtFormSchema = insertDebtSchema.extend({
   balance: z.number().positive("Balance must be positive"),
   interestRate: z.number().min(0, "Interest rate must be non-negative").max(100, "Interest rate cannot exceed 100%"),
-  minimumPayment: z.number().positive("Minimum payment must be positive"),
+  minimumPayment: z.number().min(0, "Minimum payment must be non-negative"),
+  dueDate: z.number().min(1).max(31).optional(),
 });
 
 type DebtFormData = z.infer<typeof debtFormSchema>;
@@ -51,9 +52,12 @@ export default function Debts() {
       balance: 0,
       interestRate: 0,
       minimumPayment: 0,
-      dueDate: 1,
+      dueDate: undefined,
       debtType: "credit_card",
-      paymentFrequency: "monthly",
+      paymentFrequency: "none",
+      creditorName: "",
+      hasMonthlyPayments: false,
+      notes: "",
     },
   });
 
@@ -180,6 +184,8 @@ export default function Debts() {
       case "student_loan": return "Student Loan";
       case "personal_loan": return "Personal Loan";
       case "medical_bill": return "Medical Bill";
+      case "informal_loan": return "Informal Loan";
+      case "family_friend": return "Family/Friend Loan";
       default: return "Other";
     }
   };
@@ -269,7 +275,11 @@ export default function Debts() {
                         <div>
                           <h3 className="font-semibold text-white text-lg">{debt.name}</h3>
                           <p className="text-sm text-gray-400">
-                            {getDebtTypeName(debt.debtType)} • {debt.interestRate}% APR • Due: {debt.dueDate}th
+                            {getDebtTypeName(debt.debtType)} 
+                            {debt.interestRate > 0 && ` • ${debt.interestRate}% APR`}
+                            {debt.dueDate && ` • Due: ${debt.dueDate}th`}
+                            {debt.creditorName && ` • ${debt.creditorName}`}
+                            {debt.paymentFrequency !== 'none' && ` • ${debt.paymentFrequency} payments`}
                           </p>
                         </div>
                       </div>
@@ -430,15 +440,15 @@ export default function Debts() {
                     name="dueDate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Due Date (Day of Month)</FormLabel>
+                        <FormLabel>Due Date (Day of Month) - Optional</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="number"
                             min="1"
                             max="31"
-                            onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
-                            placeholder="15"
+                            onChange={(e) => field.onChange(parseInt(e.target.value) || undefined)}
+                            placeholder="Leave blank if no due date"
                             className="glossy-input"
                           />
                         </FormControl>
@@ -448,28 +458,83 @@ export default function Debts() {
                   />
                 </div>
 
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="debtType"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Debt Type</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="glossy-input">
+                              <SelectValue placeholder="Select debt type" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="glass-card border-orange-500 border-opacity-30">
+                            <SelectItem value="credit_card">Credit Card</SelectItem>
+                            <SelectItem value="auto_loan">Auto Loan</SelectItem>
+                            <SelectItem value="mortgage">Mortgage</SelectItem>
+                            <SelectItem value="student_loan">Student Loan</SelectItem>
+                            <SelectItem value="personal_loan">Personal Loan (Bank)</SelectItem>
+                            <SelectItem value="informal_loan">Informal Loan (No Interest)</SelectItem>
+                            <SelectItem value="family_friend">Family/Friend Loan</SelectItem>
+                            <SelectItem value="medical_bill">Medical Bill</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="paymentFrequency"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Payment Plan</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="glossy-input">
+                              <SelectValue placeholder="Select payment plan" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="glass-card border-orange-500 border-opacity-30">
+                            <SelectItem value="monthly">Monthly Payments</SelectItem>
+                            <SelectItem value="weekly">Weekly Payments</SelectItem>
+                            <SelectItem value="none">No Payment Plan</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
-                  name="debtType"
+                  name="creditorName"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Debt Type</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="glossy-input">
-                            <SelectValue placeholder="Select debt type" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent className="glass-card border-orange-500 border-opacity-30">
-                          <SelectItem value="credit_card">Credit Card</SelectItem>
-                          <SelectItem value="auto_loan">Auto Loan</SelectItem>
-                          <SelectItem value="mortgage">Mortgage</SelectItem>
-                          <SelectItem value="student_loan">Student Loan</SelectItem>
-                          <SelectItem value="personal_loan">Personal Loan</SelectItem>
-                          <SelectItem value="medical_bill">Medical Bill</SelectItem>
-                          <SelectItem value="other">Other</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <FormLabel>Creditor/Person Name (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} placeholder="e.g., Juan dela Cruz, BPI Bank" className="glossy-input" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="notes"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Notes (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} value={field.value || ""} placeholder="Additional details about this debt" className="glossy-input" />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
