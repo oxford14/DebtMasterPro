@@ -17,6 +17,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const sessionId = req.headers.authorization?.replace("Bearer ", "");
     const session = sessionId ? sessions.get(sessionId) : null;
     
+    // Debug logging - remove in production
+    // console.log(`Auth check - SessionId: ${sessionId}, Session exists: ${!!session}, Total sessions: ${sessions.size}`);
+    
     if (!session) {
       return res.status(401).json({ message: "Unauthorized" });
     }

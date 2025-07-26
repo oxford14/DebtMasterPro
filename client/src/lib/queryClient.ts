@@ -1,8 +1,15 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
-import { getAuthHeaders } from "@/lib/auth";
+import { getAuthHeaders, clearStoredAuth } from "@/lib/auth";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
+    // If we get a 401, clear the stored auth and redirect to login
+    if (res.status === 401) {
+      clearStoredAuth();
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
+    }
     const text = (await res.text()) || res.statusText;
     throw new Error(`${res.status}: ${text}`);
   }
@@ -44,6 +51,7 @@ export const getQueryFn: <T>(options: {
     });
 
     if (unauthorizedBehavior === "returnNull" && res.status === 401) {
+      clearStoredAuth();
       return null;
     }
 
