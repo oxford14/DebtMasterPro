@@ -18,7 +18,7 @@ export function MobileNavigation() {
           const Icon = item.icon;
           return (
             <Link key={item.href} href={item.href}>
-              <a className="flex flex-col items-center space-y-1">
+              <div className="flex flex-col items-center space-y-1 cursor-pointer">
                 <Icon
                   className={`w-5 h-5 ${
                     item.active ? "text-orange-500" : "text-gray-400"
@@ -31,7 +31,7 @@ export function MobileNavigation() {
                 >
                   {item.label}
                 </span>
-              </a>
+              </div>
             </Link>
           );
         })}

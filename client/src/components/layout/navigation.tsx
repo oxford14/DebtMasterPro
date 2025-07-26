@@ -56,15 +56,15 @@ export function Navigation() {
         <div className="hidden md:flex items-center space-x-8">
           {navItems.map((item) => (
             <Link key={item.href} href={item.href}>
-              <a
-                className={`font-semibold transition-colors ${
+              <span
+                className={`font-semibold transition-colors cursor-pointer ${
                   item.active
                     ? "text-orange-500"
                     : "text-gray-400 hover:text-orange-500"
                 }`}
               >
                 {item.label}
-              </a>
+              </span>
             </Link>
           ))}
         </div>
