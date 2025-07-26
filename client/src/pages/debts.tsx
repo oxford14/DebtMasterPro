@@ -64,9 +64,13 @@ export default function Debts() {
   const createMutation = useMutation({
     mutationFn: async (data: DebtFormData) => {
       console.log("Submitting debt data:", data);
-      const response = await apiRequest("POST", "/api/debts", data);
+      const response = await apiRequest("POST", "/api/debts", data, true); // Skip auto-redirect on 401
       if (!response.ok) {
         const errorData = await response.json();
+        // If it's a 401, show a specific message about needing to log in
+        if (response.status === 401) {
+          throw new Error("Your session has expired. Please log in again.");
+        }
         throw new Error(errorData.message || "Failed to create debt");
       }
       return response.json();
@@ -83,10 +87,21 @@ export default function Debts() {
     },
     onError: (error: Error) => {
       console.error("Create debt error:", error);
+      const isSessionError = error.message.includes("session has expired");
       toast({
-        title: "Failed to add debt",
-        description: error.message || "Please check your input and try again",
+        title: isSessionError ? "Session Expired" : "Failed to add debt", 
+        description: isSessionError 
+          ? "Please log in again to continue" 
+          : error.message || "Please check your input and try again",
         variant: "destructive",
+        action: isSessionError ? (
+          <button 
+            onClick={() => window.location.href = "/login"}
+            className="px-3 py-1 bg-orange-500 text-white rounded text-sm hover:bg-orange-600"
+          >
+            Login
+          </button>
+        ) : undefined,
       });
     },
   });

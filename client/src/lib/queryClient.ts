@@ -1,10 +1,11 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 import { getAuthHeaders, clearStoredAuth } from "@/lib/auth";
 
-async function throwIfResNotOk(res: Response) {
+async function throwIfResNotOk(res: Response, skipAutoRedirect = false) {
   if (!res.ok) {
     // If we get a 401, clear the stored auth and redirect to login
-    if (res.status === 401) {
+    // But skip auto-redirect for mutations to let the form handle the error
+    if (res.status === 401 && !skipAutoRedirect) {
       clearStoredAuth();
       if (window.location.pathname !== '/login') {
         window.location.href = '/login';
@@ -19,6 +20,7 @@ export async function apiRequest(
   method: string,
   url: string,
   data?: unknown | undefined,
+  skipAutoRedirect = false,
 ): Promise<Response> {
   const headers: Record<string, string> = {
     ...getAuthHeaders(),
@@ -35,7 +37,7 @@ export async function apiRequest(
     credentials: "include",
   });
 
-  await throwIfResNotOk(res);
+  await throwIfResNotOk(res, skipAutoRedirect);
   return res;
 }
 
