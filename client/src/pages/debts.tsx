@@ -63,7 +63,12 @@ export default function Debts() {
 
   const createMutation = useMutation({
     mutationFn: async (data: DebtFormData) => {
+      console.log("Submitting debt data:", data);
       const response = await apiRequest("POST", "/api/debts", data);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Failed to create debt");
+      }
       return response.json();
     },
     onSuccess: () => {
@@ -76,10 +81,11 @@ export default function Debts() {
         description: "Your new debt has been added to your account",
       });
     },
-    onError: () => {
+    onError: (error: Error) => {
+      console.error("Create debt error:", error);
       toast({
         title: "Failed to add debt",
-        description: "Please check your input and try again",
+        description: error.message || "Please check your input and try again",
         variant: "destructive",
       });
     },

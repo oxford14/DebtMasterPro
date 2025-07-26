@@ -2,7 +2,7 @@ import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertDebtSchema, insertBudgetItemSchema, insertPaymentSchema, insertUserSchema } from "@shared/schema";
-import { z } from "zod";
+import { z, ZodError } from "zod";
 
 // Simple session management
 const sessions = new Map<string, { userId: number; username: string }>();
@@ -100,11 +100,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/debts", requireAuth, async (req: any, res) => {
     try {
+      console.log("Creating debt with data:", req.body);
       const debtData = insertDebtSchema.parse(req.body);
+      console.log("Parsed debt data:", debtData);
       const debt = await storage.createDebt({ ...debtData, userId: req.user.userId });
+      console.log("Created debt:", debt);
       res.json(debt);
     } catch (error) {
-      res.status(400).json({ message: "Failed to create debt" });
+      console.error("Failed to create debt:", error);
+      if (error instanceof ZodError) {
+        res.status(400).json({ message: "Validation failed", errors: error.errors });
+      } else {
+        res.status(400).json({ message: "Failed to create debt", error: error instanceof Error ? error.message : String(error) });
+      }
     }
   });
 
