@@ -111,6 +111,9 @@ The application uses four main tables:
 - PostgreSQL database hosted on Neon Database
 - Schema changes applied via `npm run db:push`
 - Connection string managed via `DATABASE_URL` environment variable
+- Reusable Neon template available in `neon-db-template.js` for quick setup
+- Environment variables configured for seamless database connection
+- Both Drizzle ORM (production) and standard pg client (testing) support
 
 ### Key Architectural Decisions
 
