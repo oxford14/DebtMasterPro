@@ -22,8 +22,8 @@ import { z } from "zod";
 
 const debtFormSchema = insertDebtSchema.extend({
   balance: z.number().positive("Balance must be positive"),
-  interestRate: z.number().min(0, "Interest rate must be non-negative").max(100, "Interest rate cannot exceed 100%"),
-  minimumPayment: z.number().min(0, "Minimum payment must be non-negative"),
+  interestRate: z.number().min(0, "Interest rate must be non-negative").max(100, "Interest rate cannot exceed 100%").optional(),
+  minimumPayment: z.number().min(0, "Minimum payment must be non-negative").optional(),
   dueDate: z.number().min(1).max(31).optional(),
 });
 
@@ -50,8 +50,8 @@ export default function Debts() {
     defaultValues: {
       name: "",
       balance: 0,
-      interestRate: 0,
-      minimumPayment: 0,
+      interestRate: undefined,
+      minimumPayment: undefined,
       dueDate: undefined,
       debtType: "credit_card",
       paymentFrequency: "none",
@@ -132,10 +132,17 @@ export default function Debts() {
   });
 
   const onSubmit = (data: DebtFormData) => {
+    // Transform the data to handle optional fields properly
+    const transformedData = {
+      ...data,
+      interestRate: data.interestRate ?? 0,
+      minimumPayment: data.minimumPayment ?? 0,
+    };
+    
     if (editingDebt) {
-      updateMutation.mutate({ id: editingDebt.id, data });
+      updateMutation.mutate({ id: editingDebt.id, data: transformedData });
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(transformedData);
     }
   };
 
@@ -144,11 +151,14 @@ export default function Debts() {
     form.reset({
       name: debt.name,
       balance: parseFloat(debt.balance),
-      interestRate: parseFloat(debt.interestRate),
-      minimumPayment: parseFloat(debt.minimumPayment),
+      interestRate: parseFloat(debt.interestRate) || undefined,
+      minimumPayment: parseFloat(debt.minimumPayment) || undefined,
       dueDate: debt.dueDate,
       debtType: debt.debtType,
       paymentFrequency: debt.paymentFrequency,
+      creditorName: debt.creditorName || "",
+      hasMonthlyPayments: debt.hasMonthlyPayments || false,
+      notes: debt.notes || "",
     });
     setIsDialogOpen(true);
   };
@@ -399,13 +409,14 @@ export default function Debts() {
                     name="interestRate"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Interest Rate (%)</FormLabel>
+                        <FormLabel>Interest Rate (%) - Optional</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             type="number"
                             step="0.01"
-                            onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
+                            value={field.value ?? ""}
+                            onChange={(e) => field.onChange(e.target.value === "" ? undefined : parseFloat(e.target.value))}
                             placeholder="0.00"
                             className="glossy-input"
                           />
@@ -422,11 +433,11 @@ export default function Debts() {
                     name="minimumPayment"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Minimum Payment</FormLabel>
+                        <FormLabel>Minimum Payment - Optional</FormLabel>
                         <FormControl>
                           <CurrencyInput
-                            value={field.value}
-                            onChange={field.onChange}
+                            value={field.value ?? 0}
+                            onChange={(value) => field.onChange(value === 0 ? undefined : value)}
                             placeholder="₱0.00"
                           />
                         </FormControl>

@@ -61,8 +61,8 @@ export const insertDebtSchema = createInsertSchema(debts).omit({
   createdAt: true,
 }).extend({
   balance: z.coerce.number().positive(),
-  interestRate: z.coerce.number().min(0).max(100),
-  minimumPayment: z.coerce.number().min(0),
+  interestRate: z.coerce.number().min(0).max(100).optional(),
+  minimumPayment: z.coerce.number().min(0).optional(),
   dueDate: z.coerce.number().min(1).max(31).optional(),
 });
 

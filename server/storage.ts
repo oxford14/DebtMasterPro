@@ -85,8 +85,8 @@ export class MemStorage implements IStorage {
       ...debt,
       id,
       balance: debt.balance.toString(),
-      interestRate: debt.interestRate.toString(),
-      minimumPayment: debt.minimumPayment.toString(),
+      interestRate: debt.interestRate?.toString() ?? "0",
+      minimumPayment: debt.minimumPayment?.toString() ?? "0",
       dueDate: debt.dueDate || null,
       paymentFrequency: debt.paymentFrequency || "none",
       creditorName: debt.creditorName || null,
@@ -253,8 +253,8 @@ export class DatabaseStorage implements IStorage {
       .values({
         ...debt,
         balance: debt.balance.toString(),
-        interestRate: debt.interestRate.toString(),
-        minimumPayment: debt.minimumPayment.toString(),
+        interestRate: debt.interestRate?.toString() ?? "0",
+        minimumPayment: debt.minimumPayment?.toString() ?? "0",
       })
       .returning();
     return newDebt;
