@@ -5,6 +5,7 @@ import { GlassCard } from "@/components/ui/glass-card";
 import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TrendingUp, TrendingDown, Shield, Target, CreditCard, Calendar, DollarSign } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Dashboard() {
   const { data: summary, isLoading: summaryLoading } = useQuery({
@@ -158,9 +159,11 @@ export default function Dashboard() {
             <GlassCard>
               <div className="flex items-center justify-between mb-6">
                 <h3 className="text-2xl font-bold">Active Debts</h3>
-                <button className="glossy-button px-4 py-2 rounded-xl text-white font-semibold text-sm">
-                  Add Debt
-                </button>
+                <Link href="/debts">
+                  <button className="glossy-button px-4 py-2 rounded-xl text-white font-semibold text-sm hover:bg-orange-600 hover:bg-opacity-20 transition-all">
+                    Add Debt
+                  </button>
+                </Link>
               </div>
               
               {debtsLoading ? (
@@ -213,7 +216,12 @@ export default function Dashboard() {
               ) : (
                 <div className="text-center py-8">
                   <CreditCard className="w-12 h-12 text-gray-500 mx-auto mb-4" />
-                  <p className="text-gray-400">No debts found. Add your first debt to get started.</p>
+                  <p className="text-gray-400 mb-4">No debts found. Add your first debt to get started.</p>
+                  <Link href="/debts">
+                    <button className="glossy-button px-6 py-3 rounded-xl text-white font-semibold hover:bg-orange-600 hover:bg-opacity-20 transition-all">
+                      Add Your First Debt
+                    </button>
+                  </Link>
                 </div>
               )}
             </GlassCard>
@@ -225,18 +233,24 @@ export default function Dashboard() {
             <GlassCard>
               <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
               <div className="space-y-3">
-                <button className="w-full flex items-center justify-between p-3 rounded-xl bg-orange-500 bg-opacity-10 border border-orange-500 border-opacity-30 hover:bg-opacity-20 transition-all">
-                  <span className="text-orange-500 font-semibold">Make Payment</span>
-                  <span className="text-orange-500">→</span>
-                </button>
-                <button className="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800 bg-opacity-50 hover:bg-opacity-70 transition-all">
-                  <span className="text-white font-semibold">Update Budget</span>
-                  <span className="text-gray-400">→</span>
-                </button>
-                <button className="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800 bg-opacity-50 hover:bg-opacity-70 transition-all">
-                  <span className="text-white font-semibold">View Reports</span>
-                  <span className="text-gray-400">→</span>
-                </button>
+                <Link href="/debts">
+                  <button className="w-full flex items-center justify-between p-3 rounded-xl bg-orange-500 bg-opacity-10 border border-orange-500 border-opacity-30 hover:bg-opacity-20 transition-all">
+                    <span className="text-orange-500 font-semibold">Make Payment</span>
+                    <span className="text-orange-500">→</span>
+                  </button>
+                </Link>
+                <Link href="/budget">
+                  <button className="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800 bg-opacity-50 hover:bg-opacity-70 transition-all">
+                    <span className="text-white font-semibold">Update Budget</span>
+                    <span className="text-gray-400">→</span>
+                  </button>
+                </Link>
+                <Link href="/reports">
+                  <button className="w-full flex items-center justify-between p-3 rounded-xl bg-gray-800 bg-opacity-50 hover:bg-opacity-70 transition-all">
+                    <span className="text-white font-semibold">View Reports</span>
+                    <span className="text-gray-400">→</span>
+                  </button>
+                </Link>
               </div>
             </GlassCard>
 
