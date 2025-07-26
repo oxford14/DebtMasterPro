@@ -114,6 +114,9 @@ The application uses four main tables:
 - Reusable Neon template available in `neon-db-template.js` for quick setup
 - Environment variables configured for seamless database connection
 - Both Drizzle ORM (production) and standard pg client (testing) support
+- Reusable Neon template available in `neon-db-template.js` for quick setup
+- Environment variables configured for seamless database connection
+- Both Drizzle ORM (production) and standard pg client (testing) support
 
 ### Key Architectural Decisions
 
